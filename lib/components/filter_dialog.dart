@@ -27,6 +27,13 @@ class _FilterDialogState extends State<FilterDialog> {
     _filterYear = widget.filterYear;
   }
 
+  void _resetFilters() {
+    setState(() {
+      _filterBranch = '';
+      _filterYear = '';
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -87,6 +94,10 @@ class _FilterDialogState extends State<FilterDialog> {
         ),
       ),
       actions: [
+        TextButton(
+          onPressed: _resetFilters,
+          child: const Text('Reset'),
+        ),
         TextButton(
           child: const Text('Cancel'),
           onPressed: () {

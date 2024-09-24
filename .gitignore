@@ -25,3 +25,7 @@ doc/api/
 
 .flutter-plugins
 .flutter-plugins-dependencies
+
+# Hidden files
+firebase_options.dart
+android/app/google-services.json

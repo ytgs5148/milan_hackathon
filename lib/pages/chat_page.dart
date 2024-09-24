@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:milan_hackathon/components/new_chat_popup.dart';
 import 'package:milan_hackathon/components/bottom_bar.dart';
 import 'package:milan_hackathon/components/filter_dialog.dart';
 import 'package:milan_hackathon/components/top_bar.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -38,6 +38,23 @@ class _ChatPageState extends State<ChatPage> {
     setState(() {
       _selectedIndex = index;
     });
+    switch (index) {
+      case 0:
+        Navigator.pushNamed(context, '/home');
+        break;
+      case 1:
+        Navigator.pushNamed(context, '/chats');
+        break;
+      case 2:
+        Navigator.pushNamed(context, '/discussions');
+        break;
+      case 3:
+        Navigator.pushNamed(context, '/resources');
+        break;
+      case 4:
+        Navigator.pushNamed(context, '/profile');
+        break;
+    }
   }
 
   void _showFilterDialog() {
@@ -52,71 +69,23 @@ class _ChatPageState extends State<ChatPage> {
               _filterBranch = branch;
               _filterYear = year;
             });
-            _applyFilters();
           },
         );
       },
     );
   }
 
-  void _applyFilters() async {
-    String url = '/chats';
-    if (_filterBranch.isNotEmpty) {
-      url += '?filter_branch=$_filterBranch';
-    }
-    if (_filterYear.isNotEmpty) {
-      url += _filterBranch.isEmpty ? '?' : '&';
-      url += 'filter_year=$_filterYear';
-    }
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
-      // Handle error - unable to launch the URL
-      print('Could not launch $url');
-    }
-  }
-
   void _showNewChatDialog() {
-    String email = '';
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Start New Chat'),
-          content: TextField(
-            onChanged: (value) {
-              email = value;
-            },
-            decoration: const InputDecoration(hintText: "Enter user's email"),
-          ),
-          actions: [
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Start Chat'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                _startNewChat(email);
-              },
-            ),
-          ],
+        return NewChatPopup(
+          onStartChat: (String email) {
+            Navigator.pushNamed(context, '/chat/$email');
+          },
         );
       },
     );
-  }
-
-  void _startNewChat(String email) async {
-    String url = '/chat/$email';
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
-      // Handle error - unable to launch the URL
-      print('Could not launch $url');
-    }
   }
 
   @override
@@ -170,8 +139,8 @@ class _ChatPageState extends State<ChatPage> {
                   title: Text(chat['name']),
                   subtitle: Text(chat['lastMessage']),
                   onTap: () {
-                    // Navigate to individual chat
-                    _startNewChat(chat['name'].replaceAll(' ', '.').toLowerCase() + '@iith.ac.in');
+                    String email = chat['name'].replaceAll(' ', '.').toLowerCase() + '@iith.ac.in';
+                    Navigator.pushNamed(context, '/chat/$email');
                   },
                 );
               },

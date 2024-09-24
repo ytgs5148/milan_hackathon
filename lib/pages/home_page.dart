@@ -20,6 +20,23 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _selectedIndex = index;
     });
+    switch (index) {
+      case 0:
+        Navigator.pushNamed(context, '/home');
+        break;
+      case 1:
+        Navigator.pushNamed(context, '/chats');
+        break;
+      case 2:
+        Navigator.pushNamed(context, '/discussions');
+        break;
+      case 3:
+        Navigator.pushNamed(context, '/resources');
+        break;
+      case 4:
+        Navigator.pushNamed(context, '/profile');
+        break;
+    }
   }
 
   @override

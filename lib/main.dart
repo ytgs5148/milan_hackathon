@@ -1,7 +1,11 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:milan_hackathon/utils/route_generator.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp();
   runApp(const MainApp());
 }
 
@@ -15,6 +19,9 @@ class MainApp extends StatelessWidget {
       theme: ThemeData.dark(),
       initialRoute: '/',
       onGenerateRoute: RouteGenerator.generateRoute,
+      onUnknownRoute: (settings) {
+        return RouteGenerator.generateRoute(const RouteSettings(name: '/'));
+      },
     );
   }
 }
