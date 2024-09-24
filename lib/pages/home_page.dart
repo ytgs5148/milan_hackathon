@@ -1,10 +1,10 @@
-// ignore_for_file: library_private_types_in_public_api
-
 import 'package:flutter/material.dart';
 import 'package:milan_hackathon/components/bottom_bar.dart';
-import 'package:milan_hackathon/components/create_post.dart';
-import 'package:milan_hackathon/components/post.dart';
+import 'package:milan_hackathon/components/create_post_button.dart';
+import 'package:milan_hackathon/components/post_card.dart';
 import 'package:milan_hackathon/components/top_bar.dart';
+import 'package:milan_hackathon/interfaces/post.dart';
+import 'package:milan_hackathon/interfaces/user.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -41,12 +41,17 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    List<Post> posts = [
+      Post(postId: 'ahsafhfb214', title: 'Lambda IITH Milan Hackathon', description: 'This is a sample post content. It can be an announcement or a user post.', author: User(name: 'IITH', email: 'iith@gmail.com', branch: 'CS', year: '1'), postedAtTimestamp: 1727161903, imageUrl: 'https://i.imgur.com/PYmSceZ.png', votes: 10, comments: []),
+      Post(postId: 'ahsafhfb214', title: 'Lambda IITH Milan Hackathon 2', description: 'This is a sample post content. It can be an announcement or a user post.', author: User(name: 'IITH', email: 'iith@gmail.com', branch: 'CS', year: '1'), postedAtTimestamp: 1727147503, imageUrl: 'https://i.imgur.com/PYmSceZ.png', votes: 10, comments: []),
+    ];
+
     return Scaffold(
       appBar: const TopBar(),
       body: ListView.builder(
-        itemCount: 2,
+        itemCount: posts.length,
         itemBuilder: (context, index) {
-          return Post(context: context, index: index);
+          return PostCard(context: context, index: index, post: posts[index],);
         },
       ),
       floatingActionButton: const CreatePost(),

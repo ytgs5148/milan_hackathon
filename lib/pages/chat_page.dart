@@ -27,9 +27,8 @@ class _ChatPageState extends State<ChatPage> {
 
   void _loadChats() {
     _chats = [
-      {'name': 'John Doe', 'lastMessage': 'Hey, how are you?', 'branch': 'CSE', 'year': '3'},
-      {'name': 'Jane Smith', 'lastMessage': 'Did you finish the assignment?', 'branch': 'ME', 'year': '2'},
-      {'name': 'Alice Johnson', 'lastMessage': 'Let\'s meet at the library', 'branch': 'EE', 'year': '4'},
+      {'name': 'Rudranil Basak', 'lastMessage': 'Hey, how are you?', 'branch': 'CSE', 'year': '3'},
+      {'name': 'Dhiraj Baid', 'lastMessage': 'Did you finish the assignment?', 'branch': 'ME', 'year': '2'},
     ];
     setState(() {});
   }

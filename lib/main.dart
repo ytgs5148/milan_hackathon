@@ -15,7 +15,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'IITH Messaging App',
+      title: 'IITH Community App',
       theme: ThemeData.dark(),
       initialRoute: '/',
       onGenerateRoute: RouteGenerator.generateRoute,
