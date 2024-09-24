@@ -32,8 +32,8 @@ class BottomBar extends StatelessWidget {
           label: 'Resources',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.person),
-          label: 'Profile',
+          icon: Icon(Icons.map),
+          label: 'Maps',
         ),
       ],
       currentIndex: currentIndex,
