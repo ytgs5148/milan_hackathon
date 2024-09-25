@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:milan_hackathon/utils/notification_manager.dart';
 import 'package:milan_hackathon/utils/route_generator.dart';
 
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
@@ -7,7 +8,9 @@ final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await LocalNotifications.init();
   await Firebase.initializeApp();
+
   runApp(const MainApp());
 }
 

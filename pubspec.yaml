@@ -19,8 +19,8 @@ dependencies:
   cloud_firestore: ^5.4.2
   firebase_storage: ^12.3.1
   dash_chat_2: ^0.0.21
-  cupertino_icons: ^1.0.8
   google_fonts: ^6.2.1
+  flutter_local_notifications: ^17.2.3
 
 dev_dependencies:
   flutter_test:

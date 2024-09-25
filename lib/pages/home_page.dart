@@ -1,8 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:milan_hackathon/components/bottom_bar.dart';
+import 'package:milan_hackathon/components/create_post_button.dart';
 import 'package:milan_hackathon/models/post.dart';
 import 'package:milan_hackathon/utils/post_manager.dart';
 import 'package:milan_hackathon/components/top_bar.dart';
+import 'package:milan_hackathon/components/post_card.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -67,28 +70,10 @@ class _HomePageState extends State<HomePage> {
                 itemCount: posts.length,
                 itemBuilder: (context, index) {
                   final post = posts[index];
-                  return ListTile(
-                    title: Text(post.title),
-                    subtitle: Text(post.description),
-                    leading: post.imageUrl != ''
-                        ? Image.network(post.imageUrl)
-                        : null,
-                    trailing: Column(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.thumb_up),
-                          onPressed: () {
-                            _postManager.upvotePost(post.postId, 'userId'); // Replace 'userId' with actual user ID
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.thumb_down),
-                          onPressed: () {
-                            _postManager.downvotePost(post.postId, 'userId'); // Replace 'userId' with actual user ID
-                          },
-                        ),
-                      ],
-                    ),
+                  return PostCard(
+                    context: context,
+                    index: index,
+                    post: post,
                   );
                 },
               );
@@ -96,32 +81,8 @@ class _HomePageState extends State<HomePage> {
           },
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
-            label: 'Chats',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.forum),
-            label: 'Discussions',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.book),
-            label: 'Resources',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-      ),
+      bottomNavigationBar: BottomBar(currentIndex: _selectedIndex, onItemTapped: _onItemTapped),
+      floatingActionButton: const CreatePost(),
     );
   }
 }

@@ -20,28 +20,29 @@ class ChatsList extends StatefulWidget {
 class _ChatsListState extends State<ChatsList> with RouteAware {
   final _auth = AuthService();
 
-  Future<Map<String, dynamic>> fetchLastMessage(String receiverEmail) async {
+  Stream<Map<String, dynamic>> fetchLastMessage(String receiverEmail) async* {
     try {
       log('Fetching last message for $receiverEmail');
       final currentUser = await _auth.getCurrentUser();
-      final chat = await _auth.getChatData(currentUser!.email!, receiverEmail).first;
-      log('Chat data: $chat $currentUser $receiverEmail');
-      if (chat != null && chat.messages != null && chat.messages!.isNotEmpty) {
-        final lastMessage = chat.messages!.last;
-        log(lastMessage.content.toString());
-        return {
-          'content': lastMessage.content ?? 'No content',
-          'isSentByUser': lastMessage.senderEmail == currentUser.email,
-        };
-      } else {
-        return {
-          'content': '',
-          'isSentByUser': false,
-        };
+      await for (var chat in _auth.getChatData(currentUser!.email!, receiverEmail)) {
+        log('Chat data: $chat $currentUser $receiverEmail');
+        if (chat != null && chat.messages != null && chat.messages!.isNotEmpty) {
+          final lastMessage = chat.messages!.last;
+          log(lastMessage.content.toString());
+          yield {
+            'content': lastMessage.content ?? 'No content',
+            'isSentByUser': lastMessage.senderEmail == currentUser.email,
+          };
+        } else {
+          yield {
+            'content': '',
+            'isSentByUser': false,
+          };
+        }
       }
     } catch (e) {
       log('Error fetching last message: $e');
-      return {
+      yield {
         'content': 'Error loading message',
         'isSentByUser': false,
       };
@@ -86,8 +87,8 @@ class _ChatsListState extends State<ChatsList> with RouteAware {
             child: chat['profilePhoto'] == null || chat['profilePhoto'].isEmpty ? Text(chat['name'][0]) : null,
           ),
           title: Text(chat['name']),
-          subtitle: FutureBuilder<Map<String, dynamic>>(
-            future: fetchLastMessage(receiverEmail),
+          subtitle: StreamBuilder<Map<String, dynamic>>(
+            stream: fetchLastMessage(receiverEmail),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Text('Loading...');
@@ -98,12 +99,18 @@ class _ChatsListState extends State<ChatsList> with RouteAware {
                 final content = lastMessage['content'] as String;
                 final isSentByUser = lastMessage['isSentByUser'] as bool;
 
-                return Text(
-                  content != ''
-                      ? (isSentByUser ? '✓ $content' : content)
-                      : 'Click to start a conversation',
-                  style: content == '' ? const TextStyle(fontStyle: FontStyle.italic) : null,
-                );
+                return content != ''
+                  ? Row(
+                      children: [
+                        if (isSentByUser) const Icon(Icons.check, size: 16),
+                        const SizedBox(width: 4),
+                        Text(content),
+                      ],
+                    )
+                  : const Text(
+                      'Click to start a conversation',
+                      style: TextStyle(fontStyle: FontStyle.italic),
+                    );
               }
             },
           ),
