@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:milan_hackathon/components/comments.dart';
 import 'package:milan_hackathon/models/post.dart';
 import 'package:milan_hackathon/models/user.dart' as user_model;
 import 'package:milan_hackathon/utils/auth_service.dart';
@@ -27,6 +29,8 @@ class _PostState extends State<PostCard> {
   late Future<user_model.User?> _userProfileFuture;
   late Future<User?> _currentlyLoggedInUserProfileFuture;
   late Post _post;
+  bool _isLoadingAiResponse = false;
+  String? _aiResponse;
 
   final postmanager = PostManager();
 
@@ -61,7 +65,8 @@ class _PostState extends State<PostCard> {
         await postmanager.downvotePost(_post.postId, currentUser.email!);
       }
     } else if (_post.downvotedBy.contains(currentUser.email!)) {
-      await postmanager.removeDownvoteFromPost(_post.postId, currentUser.email!);
+      await postmanager.removeDownvoteFromPost(
+          _post.postId, currentUser.email!);
       if (amt == 1) {
         await postmanager.upvotePost(_post.postId, currentUser.email!);
       }
@@ -82,12 +87,96 @@ class _PostState extends State<PostCard> {
     });
   }
 
+  void fetchAiResponse() async {
+    setState(() {
+      _isLoadingAiResponse = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse(
+            'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyAMWxsM-qSg3-SfOLks6WCFyVVoIU9_yc0'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "contents": [
+            {
+              "parts": [
+                {
+                  "text":
+                      'Summarize the following text in 1-2 sentences: ${_post.title} ${_post.description}'
+                }
+              ]
+            }
+          ]
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+        _aiResponse =
+            responseBody['candidates'][0]['content']['parts'][0]['text'];
+      } else {
+        _aiResponse = 'Error: ${response.statusCode} ${response.body}';
+      }
+    } catch (e) {
+      _aiResponse = 'Error: $e';
+    } finally {
+      setState(() {
+        _isLoadingAiResponse = false;
+      });
+
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('AI Generated Text'),
+            content: Text(_aiResponse ?? 'No response'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Close'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  void openAiPopup() {
+    showDialog(
+      context: widget.context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext dialogContext, setDialogState) {
+            return AlertDialog(
+              title: const Text('AI Generated Text'),
+              content: _isLoadingAiResponse
+                  ? const Center(child: CircularProgressIndicator())
+                  : Text(_aiResponse ?? 'No response'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                  },
+                  child: const Text('Close'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.all(8.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start, // Ensure left alignment
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ListTile(
             leading: FutureBuilder<user_model.User?>(
@@ -127,7 +216,7 @@ class _PostState extends State<PostCard> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start, // Ensure left alignment
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(_post.title, style: Theme.of(context).textTheme.headlineSmall),
                 const SizedBox(height: 8.0),
@@ -167,10 +256,11 @@ class _PostState extends State<PostCard> {
                           onPressed: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('You need to be logged in to vote on a post'),
+                                content: Text(
+                                    'You need to be logged in to vote on a post'),
                               ),
                             );
-                          }, // Disable voting
+                          },
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -181,10 +271,11 @@ class _PostState extends State<PostCard> {
                           onPressed: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('You need to be logged in to vote on a post'),
+                                content: Text(
+                                    'You need to be logged in to vote on a post'),
                               ),
                             );
-                          }, // Disable voting
+                          },
                         ),
                       ],
                     ),
@@ -193,35 +284,32 @@ class _PostState extends State<PostCard> {
                         IconButton(
                           icon: const Icon(Icons.comment),
                           onPressed: () {
-                            // TODO: Show comments
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.auto_awesome),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  title: const Text('AI Summary'),
-                                  content: const Text('This is an AI-generated summary of the post.'),
-                                  actions: [
-                                    TextButton(
-                                      child: const Text('Close'),
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                      },
-                                    ),
-                                  ],
-                                );
-                              },
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('You need to be logged in to comment on a post'),
+                              ),
                             );
                           },
                         ),
                         IconButton(
-                          icon: const Icon(Icons.share),
-                          onPressed: () {},
+                          icon: const Icon(Icons.auto_awesome),
+                          onPressed: _isLoadingAiResponse
+                              ? null
+                              : () {
+                                  setState(() {
+                                    _isLoadingAiResponse = true;
+                                  });
+                                  fetchAiResponse();
+                                },
+                          iconSize: 24.0,
+                          padding: const EdgeInsets.all(0),
                         ),
+                        if (_isLoadingAiResponse)
+                          const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
                       ],
                     ),
                   ],
@@ -247,9 +335,16 @@ class _PostState extends State<PostCard> {
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Text('${getVoteCount()}', style: TextStyle(
-                            color: getVoteCount() > 0 ? Colors.green[500] : getVoteCount() < 0 ? Colors.red[500] : null,
-                          ),),
+                          child: Text(
+                            '${getVoteCount()}',
+                            style: TextStyle(
+                              color: getVoteCount() > 0
+                                  ? Colors.green[500]
+                                  : getVoteCount() < 0
+                                      ? Colors.red[500]
+                                      : null,
+                            ),
+                          ),
                         ),
                         IconButton(
                           icon: Icon(
@@ -267,48 +362,31 @@ class _PostState extends State<PostCard> {
                         IconButton(
                           icon: const Icon(Icons.comment),
                           onPressed: () {
-                            showDialog(context: context, builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: const Text('Comments'),
-                                content: const Text('This is a placeholder for the comments section.'),
-                                actions: [
-                                  TextButton(
-                                    child: const Text('Close'),
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                  ),
-                                ],
-                              );
-                            });
+                            showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                builder: (BuildContext context) {
+                                  return CommentList(widget: widget);
+                                });
                           },
                         ),
                         IconButton(
                           icon: const Icon(Icons.auto_awesome),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  title: const Text('AI Summary'),
-                                  content: const Text('This is an AI-generated summary of the post.'),
-                                  actions: [
-                                    TextButton(
-                                      child: const Text('Close'),
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                      },
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          },
+                          onPressed: _isLoadingAiResponse
+                              ? null
+                              : () {
+                                  setState(() {
+                                    _isLoadingAiResponse = true;
+                                  });
+                                  fetchAiResponse();
+                                },
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.share),
-                          onPressed: () {},
-                        ),
+                        if (_isLoadingAiResponse)
+                          const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
                       ],
                     ),
                   ],

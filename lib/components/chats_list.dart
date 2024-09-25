@@ -1,13 +1,13 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:milan_hackathon/utils/auth_service.dart';
-import 'package:milan_hackathon/main.dart'; // Import the main.dart file to access the routeObserver
+import 'package:milan_hackathon/main.dart';
 
 class ChatsList extends StatefulWidget {
   final List<Map<String, dynamic>> chats;
   final String searchQuery;
 
-  ChatsList({
+  const ChatsList({
     super.key,
     required this.chats,
     required this.searchQuery,
@@ -63,10 +63,7 @@ class _ChatsListState extends State<ChatsList> with RouteAware {
 
   @override
   void didPopNext() {
-    // Called when the current route has been popped off, and the user returns to this route.
-    setState(() {
-      // Trigger a rebuild to refresh the last messages.
-    });
+    setState(() {});
   }
 
   @override

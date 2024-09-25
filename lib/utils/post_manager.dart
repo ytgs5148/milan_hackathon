@@ -162,7 +162,7 @@ class PostManager {
         'title': title,
         'description': description,
         'authorEmail': authorEmail,
-        'postedAtTimestamp': (DateTime.now().microsecondsSinceEpoch).truncate(),
+        'postedAtTimestamp': (DateTime.now().millisecondsSinceEpoch).truncate(),
         'imageUrl': imageUrl,
         'upvotedBy': [],
         'downvotedBy': [],

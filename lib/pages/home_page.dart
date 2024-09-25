@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:milan_hackathon/components/bottom_bar.dart';
 import 'package:milan_hackathon/components/create_post_button.dart';
@@ -17,6 +16,27 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   final PostManager _postManager = PostManager();
+  late Future<List<Post>> _postsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _postsFuture = _fetchPosts();
+  }
+
+  Future<List<Post>> _fetchPosts() async {
+    final snapshot = await _postManager.fetchPosts().first;
+    return snapshot.docs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      return Post.fromMap(data);
+    }).toList();
+  }
+
+  Future<void> _refreshPosts() async {
+    setState(() {
+      _postsFuture = _fetchPosts();
+    });
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -41,39 +61,31 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> _refreshPosts() async {
-    setState(() {});
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const TopBar(),
       body: RefreshIndicator(
         onRefresh: _refreshPosts,
-        child: StreamBuilder<QuerySnapshot>(
-          stream: _postManager.fetchPosts(),
+        child: FutureBuilder<List<Post>>(
+          future: _postsFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             } else if (snapshot.hasError) {
               return const Center(child: Text('Error loading posts'));
-            } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
               return const Center(child: Text('No posts available'));
             } else {
-              final posts = snapshot.data!.docs.map((doc) {
-                final data = doc.data() as Map<String, dynamic>;
-                return Post.fromMap(data);
-              }).toList();
-
+              final posts = snapshot.data!;
               return ListView.builder(
                 itemCount: posts.length,
                 itemBuilder: (context, index) {
                   final post = posts[index];
                   return PostCard(
-                    context: context,
                     index: index,
                     post: post,
+                    context: context,
                   );
                 },
               );

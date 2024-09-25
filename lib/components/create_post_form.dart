@@ -74,7 +74,8 @@ class _CreatePostFormState extends State<CreatePostForm> {
         );
 
         LocalNotifications.showNotification('Post Uploaded', 'Your post has been uploaded successfully!', 'Payload here');
-        Navigator.pop(context);
+
+        Navigator.of(context).pop();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to upload post: $e')),

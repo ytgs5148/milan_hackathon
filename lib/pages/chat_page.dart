@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:milan_hackathon/components/chats_list.dart';
-import 'package:milan_hackathon/components/new_chat_popup.dart';
 import 'package:milan_hackathon/components/bottom_bar.dart';
 import 'package:milan_hackathon/components/top_bar.dart';
 import 'package:milan_hackathon/utils/auth_service.dart';
@@ -38,19 +37,6 @@ class _ChatPageState extends State<ChatPage> {
         Navigator.pushNamed(context, '/profile');
         break;
     }
-  }
-
-  void _showNewChatDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return NewChatPopup(
-          onStartChat: (String email) {
-            Navigator.pushNamed(context, '/chat/$email', arguments: email);
-          },
-        );
-      },
-    );
   }
 
   @override
@@ -105,10 +91,6 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showNewChatDialog,
-        child: const Icon(Icons.chat),
       ),
       bottomNavigationBar: BottomBar(currentIndex: _selectedIndex, onItemTapped: _onItemTapped),
     );

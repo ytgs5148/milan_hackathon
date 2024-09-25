@@ -6,7 +6,7 @@ import 'package:milan_hackathon/models/chat.dart';
 import 'package:milan_hackathon/models/message.dart';
 import 'package:milan_hackathon/models/user.dart' as user_model;
 import 'package:milan_hackathon/utils/auth_service.dart';
-import 'package:milan_hackathon/components/loading_screen.dart'; // Import the LoadingScreen widget
+import 'package:milan_hackathon/components/loading_screen.dart';
 
 class ChatDetailPage extends StatefulWidget {
   final String email;
@@ -29,10 +29,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       selectedIndex = index;
     });
     if (index == 1) {
-      // Check if the user is logged in
       final currentUser = await _auth.getCurrentUser();
       if (currentUser == null) {
-        // Show loading screen and initiate Google Sign-In
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -41,10 +39,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         );
         final userCredential = await _auth.loginWithGoogle();
         if (userCredential != null) {
-          Navigator.pop(context); // Remove the loading screen
+          Navigator.pop(context);
           Navigator.pushNamed(context, '/chats');
         } else {
-          Navigator.pop(context); // Remove the loading screen
+          Navigator.pop(context);
           _showLoginPopup();
         }
       } else {
@@ -208,9 +206,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                             children: [
                               IconButton(
                                 icon: const Icon(Icons.auto_awesome),
-                                onPressed: () {
-                                  // Add action for your custom icon
-                                },
+                                onPressed: () {},
                               ),
                               IconButton(
                                 icon: const Icon(Icons.send),
