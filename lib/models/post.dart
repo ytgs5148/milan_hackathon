@@ -1,5 +1,5 @@
-import 'package:milan_hackathon/interfaces/comments.dart';
-import 'package:milan_hackathon/interfaces/user.dart';
+import 'package:milan_hackathon/models/comments.dart';
+import 'package:milan_hackathon/models/user.dart';
 
 class Post {
   final String postId;
@@ -32,6 +32,22 @@ class Post {
       imageUrl: json['imageUrl'],
       votes: json['votes'],
       comments: json['comments'].map<Comments>((comment) => Comments.fromJson(comment)).toList(),
+    );
+  }
+
+  factory Post.fromMap(Map<String, dynamic> map) {
+    return Post(
+      postId: map['postId'] ?? '',
+      title: map['title'] ?? '',
+      description: map['description'] ?? '',
+      author: User.fromJson(map['author'] ?? {}),
+      postedAtTimestamp: map['postedAtTimestamp'] ?? 0,
+      imageUrl: map['imageUrl'] ?? '',
+      votes: map['votes'] ?? 0,
+      comments: (map['comments'] as List<dynamic>?)
+              ?.map((comment) => Comments.fromJson(comment as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
   }
 }

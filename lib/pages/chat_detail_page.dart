@@ -1,220 +1,251 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
 import 'package:milan_hackathon/components/bottom_bar.dart';
-import 'package:milan_hackathon/components/chat_screen_header.dart';
-import 'package:milan_hackathon/interfaces/user.dart';
-import 'package:milan_hackathon/utils/api.dart'; // Import the API service
+import 'package:milan_hackathon/models/chat.dart';
+import 'package:milan_hackathon/models/message.dart';
+import 'package:milan_hackathon/models/user.dart' as user_model;
+import 'package:milan_hackathon/utils/auth_service.dart';
+import 'package:milan_hackathon/components/loading_screen.dart'; // Import the LoadingScreen widget
 
 class ChatDetailPage extends StatefulWidget {
-  final String emailId;
+  final String email;
 
-  const ChatDetailPage({super.key, required this.emailId});
+  const ChatDetailPage({super.key, required this.email});
 
   @override
   _ChatDetailPageState createState() => _ChatDetailPageState();
 }
 
 class _ChatDetailPageState extends State<ChatDetailPage> {
-  final TextEditingController _messageController = TextEditingController();
-  final List<Map<String, dynamic>> _messages = [];
-  User? _userData;
-  bool _isLoading = true;
+  final AuthService _auth = AuthService();
+  user_model.User? _currentUser;
+  user_model.User? _receiverUser;
 
-  bool _showAiOptions = false;
-  int _selectedIndex = 1;
+  int selectedIndex = 1;
 
-  void _onItemTapped(int index) {
+  void onItemTapped(int index) async {
     setState(() {
-      _selectedIndex = index;
+      selectedIndex = index;
     });
-    switch (index) {
-      case 0:
-        Navigator.pushNamed(context, '/home');
-        break;
-      case 1:
+    if (index == 1) {
+      // Check if the user is logged in
+      final currentUser = await _auth.getCurrentUser();
+      if (currentUser == null) {
+        // Show loading screen and initiate Google Sign-In
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const LoadingScreen(),
+          ),
+        );
+        final userCredential = await _auth.loginWithGoogle();
+        if (userCredential != null) {
+          Navigator.pop(context); // Remove the loading screen
+          Navigator.pushNamed(context, '/chats');
+        } else {
+          Navigator.pop(context); // Remove the loading screen
+          _showLoginPopup();
+        }
+      } else {
         Navigator.pushNamed(context, '/chats');
-        break;
-      case 2:
-        Navigator.pushNamed(context, '/discussions');
-        break;
-      case 3:
-        Navigator.pushNamed(context, '/resources');
-        break;
-      case 4:
-        Navigator.pushNamed(context, '/profile');
-        break;
+      }
+    } else {
+      switch (index) {
+        case 0:
+          Navigator.pushNamed(context, '/home');
+          break;
+        case 2:
+          Navigator.pushNamed(context, '/discussions');
+          break;
+        case 3:
+          Navigator.pushNamed(context, '/resources');
+          break;
+        case 4:
+          Navigator.pushNamed(context, '/profile');
+          break;
+      }
     }
   }
 
   @override
   void initState() {
     super.initState();
-    _fetchUserData();
-    // Simulating some initial messages
-    _messages.add({'sender': 'other', 'message': 'Hello!', 'timestamp': DateTime.now().subtract(const Duration(minutes: 5))});
-    _messages.add({'sender': 'me', 'message': 'Hi there!', 'timestamp': DateTime.now().subtract(const Duration(minutes: 4))});
-    _messages.add({'sender': 'other', 'message': 'How are you?', 'timestamp': DateTime.now().subtract(const Duration(minutes: 3))});
+    _initializeChat();
   }
 
-  Future<void> _fetchUserData() async {
-    try {
-      final userData = await ApiService.fetchUserData(widget.emailId);
-      setState(() {
-        _userData = userData;
-        _isLoading = false;
-      });
-    } catch (e) {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Error'),
-            content: Text('Failed to load user data: $e'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text('OK'),
-              ),
-            ],
+  Future<void> _initializeChat() async {
+    final currentUser = await _auth.getCurrentUser();
+    if (currentUser != null) {
+      final receiverUser = await _auth.getUserData(widget.email);
+      if (mounted) {
+        setState(() {
+          _currentUser = user_model.User(
+            name: currentUser.displayName ?? '',
+            email: currentUser.email ?? '',
+            profilePhoto: currentUser.photoURL ?? '',
+            branch: '',
+            year: '',
           );
-        },
+          _receiverUser = receiverUser;
+        });
+      }
+    } else {
+      _showLoginPopup();
+    }
+  }
+
+  List<ChatMessage> _generateChatMessageList(List<Message> messages) {
+    List<ChatMessage> chatMessages = messages.map((m) {
+      return ChatMessage(
+        user: ChatUser(
+          id: _currentUser!.email == m.senderEmail ? _currentUser!.email : _receiverUser!.email,
+          firstName: _currentUser!.email == m.senderEmail ? _currentUser!.name : _receiverUser!.name,
+          profileImage: _currentUser!.email == m.senderEmail ? _currentUser!.profilePhoto : _receiverUser!.profilePhoto,
+        ),
+        createdAt: m.sentAt!.toDate(),
+        text: m.content ?? '',
       );
-      setState(() {
-        _isLoading = false;
-      });
-    }
+    }).toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    return chatMessages;
   }
 
-  void _sendMessage(String message) {
-    setState(() {
-      _messages.add({'sender': 'me', 'message': message, 'timestamp': DateTime.now()});
-      _messageController.clear();
-    });
+  void _showLoginPopup() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Login Required'),
+          content: const Text('Please log in to continue.'),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                final user = await _auth.loginWithGoogle();
+                if (user != null) {
+                  Navigator.of(context).pop();
+                  if (mounted) {
+                    _initializeChat();
+                  }
+                }
+              },
+              child: const Text('Login'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
-  void _applyAiTool(String tool) {
-    String currentText = _messageController.text;
-    switch (tool) {
-      case 'Make text professional':
-        _messageController.text = 'Dear recipient, $currentText';
-        break;
-      case 'Make text casual':
-        _messageController.text = 'Hey! $currentText';
-        break;
-    }
-    setState(() {
-      _showAiOptions = false;
-    });
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return MaterialApp(
-        theme: ThemeData.dark(),
-        home: const Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(),
+    return Scaffold(
+      body: Column(
+        children: [
+          AppBar(
+            title: Row(
+              children: [
+                if (_receiverUser?.profilePhoto != null && _receiverUser!.profilePhoto.isNotEmpty)
+                  CircleAvatar(
+                    backgroundImage: NetworkImage(_receiverUser!.profilePhoto),
+                  ),
+                const SizedBox(width: 10),
+                Text(_receiverUser?.name ?? 'Unknown'),
+              ],
+            ),
           ),
-        ),
-      );
-    }
-
-    return MaterialApp(
-      theme: ThemeData.dark(),
-      home: Scaffold(
-        appBar: ChatScreenHeader(userData: _userData),
-        body: Column(
-          children: [
+          if (_currentUser != null && _receiverUser != null)
             Expanded(
-              child: ListView.builder(
-                reverse: true,
-                itemCount: _messages.length,
-                itemBuilder: (context, index) {
-                  final message = _messages[_messages.length - 1 - index];
-                  return Align(
-                    alignment: message['sender'] == 'me' ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: message['sender'] == 'me' ? Colors.blue[700] : Colors.grey[800],
-                        borderRadius: BorderRadius.circular(16),
+              child: StreamBuilder<Chat?>(
+                stream: _auth.getChatData(_currentUser!.email, _receiverUser!.email),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  } else if (snapshot.hasData && snapshot.data != null) {
+                    Chat chat = snapshot.data!;
+                    List<ChatMessage> messages = _generateChatMessageList(chat.messages!);
+
+                    return DashChat(
+                      messages: messages,
+                      currentUser: ChatUser(
+                        id: _currentUser!.email,
+                        firstName: _currentUser!.name,
+                        profileImage: _currentUser!.profilePhoto,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(message['message']),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${message['timestamp'].hour}:${message['timestamp'].minute.toString().padLeft(2, '0')}',
-                            style: TextStyle(fontSize: 10, color: Colors.grey[400]),
+                      messageOptions: MessageOptions(
+                        showOtherUsersAvatar: true,
+                        showTime: true,
+                        messageDecorationBuilder: (ChatMessage msg, ChatMessage? prevMsg, ChatMessage? nextMsg) {
+                          bool isUser = msg.user.id == _currentUser!.email;
+                          return BoxDecoration(
+                            color: isUser ? Colors.blue[100] : Colors.grey[300],
+                            borderRadius: BorderRadius.circular(10),
+                          );
+                        },
+                      ),
+                      inputOptions: InputOptions(
+                        inputDecoration: InputDecoration(
+                          filled: true,
+                          fillColor: Colors.white,
+                          hintText: 'Type a message',
+                          hintStyle: TextStyle(color: Colors.grey[600]),
+                          contentPadding: const EdgeInsets.all(10),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: BorderSide.none,
                           ),
-                        ],
+                        ),
+                        inputTextStyle: const TextStyle(color: Colors.black),
+                        sendButtonBuilder: (onSend) {
+                          return Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.auto_awesome),
+                                onPressed: () {
+                                  // Add action for your custom icon
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.send),
+                                onPressed: () {
+                                  onSend();
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                        alwaysShowSend: true,
+                        autocorrect: true,
                       ),
-                    ),
-                  );
+                      onSend: (ChatMessage chatMessage) async {
+                        Message message = Message(
+                          senderEmail: _currentUser!.email,
+                          receiverEmail: _receiverUser?.email ?? 'unknown',
+                          content: chatMessage.text,
+                          messageType: MessageType.Text,
+                          sentAt: Timestamp.fromDate(chatMessage.createdAt),
+                        );
+                        await _auth.sendMessage(message);
+                      },
+                    );
+                  } else {
+                    return const Center(child: Text('No data available.'));
+                  }
                 },
               ),
-            ),
-            if (_showAiOptions)
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                color: Colors.grey[850],
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () => _applyAiTool('Make text professional'),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
-                      child: const Text('Make text professional'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => _applyAiTool('Make text casual'),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
-                      child: const Text('Make text casual'),
-                    ),
-                  ],
-                ),
-              ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              color: Colors.grey[900],
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _messageController,
-                      decoration: const InputDecoration(
-                        hintText: 'Type a message...',
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.auto_awesome),
-                    onPressed: () {
-                      setState(() {
-                        _showAiOptions = !_showAiOptions;
-                      });
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.send),
-                    onPressed: () {
-                      if (_messageController.text.isNotEmpty) {
-                        _sendMessage(_messageController.text);
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        bottomNavigationBar: BottomBar(currentIndex: _selectedIndex, onItemTapped: _onItemTapped),
+            )
+          else
+            const Center(child: CircularProgressIndicator()),
+        ],
       ),
+      bottomNavigationBar: BottomBar(currentIndex: selectedIndex, onItemTapped: onItemTapped),
     );
   }
 }

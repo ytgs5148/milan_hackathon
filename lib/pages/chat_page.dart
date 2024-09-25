@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:milan_hackathon/components/chats_list.dart';
 import 'package:milan_hackathon/components/new_chat_popup.dart';
 import 'package:milan_hackathon/components/bottom_bar.dart';
-import 'package:milan_hackathon/components/filter_dialog.dart';
 import 'package:milan_hackathon/components/top_bar.dart';
+import 'package:milan_hackathon/utils/auth_service.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -12,26 +14,8 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  String _filterBranch = '';
-  String _filterYear = '';
   String _searchQuery = '';
   int _selectedIndex = 1;
-
-  List<Map<String, dynamic>> _chats = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadChats();
-  }
-
-  void _loadChats() {
-    _chats = [
-      {'name': 'Rudranil Basak', 'lastMessage': 'Hey, how are you?', 'branch': 'CSE', 'year': '3'},
-      {'name': 'Dhiraj Baid', 'lastMessage': 'Did you finish the assignment?', 'branch': 'ME', 'year': '2'},
-    ];
-    setState(() {});
-  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -56,31 +40,13 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  void _showFilterDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return FilterDialog(
-          filterBranch: _filterBranch,
-          filterYear: _filterYear,
-          onApply: (String branch, String year) {
-            setState(() {
-              _filterBranch = branch;
-              _filterYear = year;
-            });
-          },
-        );
-      },
-    );
-  }
-
   void _showNewChatDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return NewChatPopup(
           onStartChat: (String email) {
-            Navigator.pushNamed(context, '/chat/$email');
+            Navigator.pushNamed(context, '/chat/$email', arguments: email);
           },
         );
       },
@@ -89,18 +55,14 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    List<Map<String, dynamic>> filteredChats = _chats.where((chat) {
-      return chat['name'].toLowerCase().contains(_searchQuery.toLowerCase()) &&
-          (_filterBranch.isEmpty || chat['branch'] == _filterBranch) &&
-          (_filterYear.isEmpty || chat['year'] == _filterYear);
-    }).toList();
+    final authService = AuthService();
 
     return Scaffold(
       appBar: const TopBar(),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(20.0),
             child: Row(
               children: [
                 Expanded(
@@ -119,29 +81,26 @@ class _ChatPageState extends State<ChatPage> {
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.filter_list),
-                  onPressed: _showFilterDialog,
-                ),
               ],
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              itemCount: filteredChats.length,
-              itemBuilder: (context, index) {
-                final chat = filteredChats[index];
-                return ListTile(
-                  leading: CircleAvatar(
-                    child: Text(chat['name'][0]),
-                  ),
-                  title: Text(chat['name']),
-                  subtitle: Text(chat['lastMessage']),
-                  onTap: () {
-                    String email = chat['name'].replaceAll(' ', '.').toLowerCase() + '@iith.ac.in';
-                    Navigator.pushNamed(context, '/chat/$email');
-                  },
-                );
+            child: StreamBuilder<QuerySnapshot>(
+              stream: authService.getUserProfiles(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return const Center(child: Text('Error loading chats'));
+                } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(child: Text('Not logged in. Log in by clicking on the top right corner.'));
+                } else {
+                  final chats = snapshot.data!.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+                  return ChatsList(
+                    chats: chats,
+                    searchQuery: _searchQuery,
+                  );
+                }
               },
             ),
           ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:milan_hackathon/interfaces/post.dart';
+import 'package:milan_hackathon/models/post.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class PostCard extends StatefulWidget {

@@ -1,10 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:milan_hackathon/components/bottom_bar.dart';
-import 'package:milan_hackathon/components/create_post_button.dart';
-import 'package:milan_hackathon/components/post_card.dart';
+import 'package:milan_hackathon/models/post.dart';
+import 'package:milan_hackathon/utils/post_manager.dart';
 import 'package:milan_hackathon/components/top_bar.dart';
-import 'package:milan_hackathon/interfaces/post.dart';
-import 'package:milan_hackathon/interfaces/user.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,6 +13,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+  final PostManager _postManager = PostManager();
 
   void _onItemTapped(int index) {
     setState(() {
@@ -39,23 +38,90 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _refreshPosts() async {
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
-    List<Post> posts = [
-      Post(postId: 'ahsafhfb214', title: 'Lambda IITH Milan Hackathon', description: 'This is a sample post content. It can be an announcement or a user post.', author: User(name: 'IITH', email: 'iith@gmail.com', branch: 'CS', year: '1'), postedAtTimestamp: 1727161903, imageUrl: 'https://i.imgur.com/PYmSceZ.png', votes: 10, comments: []),
-      Post(postId: 'ahsafhfb214', title: 'Lambda IITH Milan Hackathon 2', description: 'This is a sample post content. It can be an announcement or a user post.', author: User(name: 'IITH', email: 'iith@gmail.com', branch: 'CS', year: '1'), postedAtTimestamp: 1727147503, imageUrl: 'https://i.imgur.com/PYmSceZ.png', votes: 10, comments: []),
-    ];
-
     return Scaffold(
       appBar: const TopBar(),
-      body: ListView.builder(
-        itemCount: posts.length,
-        itemBuilder: (context, index) {
-          return PostCard(context: context, index: index, post: posts[index],);
-        },
+      body: RefreshIndicator(
+        onRefresh: _refreshPosts,
+        child: StreamBuilder<QuerySnapshot>(
+          stream: _postManager.fetchPosts(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return const Center(child: Text('Error loading posts'));
+            } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return const Center(child: Text('No posts available'));
+            } else {
+              final posts = snapshot.data!.docs.map((doc) {
+                final data = doc.data() as Map<String, dynamic>;
+                return Post.fromMap(data);
+              }).toList();
+
+              return ListView.builder(
+                itemCount: posts.length,
+                itemBuilder: (context, index) {
+                  final post = posts[index];
+                  return ListTile(
+                    title: Text(post.title),
+                    subtitle: Text(post.description),
+                    leading: post.imageUrl != ''
+                        ? Image.network(post.imageUrl)
+                        : null,
+                    trailing: Column(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.thumb_up),
+                          onPressed: () {
+                            _postManager.upvotePost(post.postId, 'userId'); // Replace 'userId' with actual user ID
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.thumb_down),
+                          onPressed: () {
+                            _postManager.downvotePost(post.postId, 'userId'); // Replace 'userId' with actual user ID
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            }
+          },
+        ),
       ),
-      floatingActionButton: const CreatePost(),
-      bottomNavigationBar: BottomBar(currentIndex: _selectedIndex, onItemTapped: _onItemTapped),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat),
+            label: 'Chats',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.forum),
+            label: 'Discussions',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.book),
+            label: 'Resources',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+      ),
     );
   }
 }

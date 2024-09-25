@@ -1,4 +1,4 @@
-import 'package:milan_hackathon/interfaces/user.dart';
+import 'package:milan_hackathon/models/user.dart';
 
 class Comments {
   final String postId;

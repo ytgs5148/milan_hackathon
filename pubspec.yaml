@@ -1,5 +1,5 @@
 name: milan_hackathon
-description: "A new Flutter project."
+description: "An app created by Team Vivekananda"
 publish_to: 'none'
 version: 0.1.0
 
@@ -16,6 +16,11 @@ dependencies:
   google_sign_in: ^6.2.1
   image_picker: ^1.1.2
   timeago: ^3.7.0
+  cloud_firestore: ^5.4.2
+  firebase_storage: ^12.3.1
+  dash_chat_2: ^0.0.21
+  cupertino_icons: ^1.0.8
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:

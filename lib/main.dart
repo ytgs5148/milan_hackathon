@@ -2,6 +2,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:milan_hackathon/utils/route_generator.dart';
 
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -15,6 +17,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'IITH Community App',
       theme: ThemeData.dark(),
       initialRoute: '/',
@@ -22,6 +25,7 @@ class MainApp extends StatelessWidget {
       onUnknownRoute: (settings) {
         return RouteGenerator.generateRoute(const RouteSettings(name: '/'));
       },
+      navigatorObservers: [routeObserver],
     );
   }
 }

@@ -24,7 +24,7 @@ class RouteGenerator {
     //   return MaterialPageRoute(builder: (_) => const ProfilePage());
     // }
     else if (path.startsWith('/chat/') && emailId != null) {
-      return MaterialPageRoute(builder: (_) => ChatDetailPage(emailId: emailId));
+      return MaterialPageRoute(builder: (_) => ChatDetailPage(email: emailId));
     } else {
       return errorRoute('Route not found');
     }
