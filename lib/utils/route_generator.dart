@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:milan_hackathon/pages/chat_page.dart';
 import 'package:milan_hackathon/pages/home_page.dart';
 import 'package:milan_hackathon/pages/chat_detail_page.dart';
+import 'package:milan_hackathon/pages/shop_page.dart';
 
 class RouteGenerator {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -15,12 +16,12 @@ class RouteGenerator {
       return MaterialPageRoute(builder: (_) => const HomePage());
     } else if (path == '/chats') {
       return MaterialPageRoute(builder: (_) => const ChatPage());
-    }
-    // else if (path == '/discussions') {
-    //   return MaterialPageRoute(builder: (_) => const DiscussionsPage());
-    // } else if (path == '/resources') {
+    } else if (path == '/shop') {
+      return MaterialPageRoute(builder: (_) => const ShopPage());
+    } 
+    //else if (path == '/resources') {
     //   return MaterialPageRoute(builder: (_) => const ResourcesPage());
-    // } else if (path == '/profile') {
+    // } else if (path == '/map') {
     //   return MaterialPageRoute(builder: (_) => const ProfilePage());
     // }
     else if (path.startsWith('/chat/') && emailId != null) {

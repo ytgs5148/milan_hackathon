@@ -40,9 +40,6 @@ class _TopBarState extends State<TopBar> {
                     isLoading = true;
                   });
                   switch (result) {
-                    case 'Profile':
-                      Navigator.pushNamed(context, '/profile');
-                      break;
                     case 'Logout':
                       await auth.signOut();
                       Navigator.pushNamed(context, '/');
@@ -53,13 +50,6 @@ class _TopBarState extends State<TopBar> {
                   });
                 },
                 itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                  const PopupMenuItem<String>(
-                    value: 'Profile',
-                    child: ListTile(
-                      leading: Icon(Icons.person),
-                      title: Text('Profile'),
-                    ),
-                  ),
                   const PopupMenuItem<String>(
                     value: 'Logout',
                     child: ListTile(

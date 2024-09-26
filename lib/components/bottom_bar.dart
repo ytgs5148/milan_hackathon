@@ -24,8 +24,8 @@ class BottomBar extends StatelessWidget {
           label: 'Chats',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.forum),
-          label: 'Discussions',
+          icon: Icon(Icons.shopping_cart),
+          label: 'Shop',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.folder),
