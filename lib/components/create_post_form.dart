@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:milan_hackathon/utils/auth_service.dart';
-import 'package:milan_hackathon/utils/notification_manager.dart';
 import 'package:milan_hackathon/utils/post_manager.dart';
 
 class CreatePostForm extends StatefulWidget {
@@ -72,8 +71,6 @@ class _CreatePostFormState extends State<CreatePostForm> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Post uploaded successfully!')),
         );
-
-        LocalNotifications.showNotification('Post Uploaded', 'Your post has been uploaded successfully!', 'Payload here');
 
         Navigator.of(context).pop();
       } catch (e) {

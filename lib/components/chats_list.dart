@@ -30,7 +30,7 @@ class _ChatsListState extends State<ChatsList> with RouteAware {
           final lastMessage = chat.messages!.last;
           log(lastMessage.content.toString());
           yield {
-            'content': lastMessage.content ?? 'No content',
+            'content': lastMessage.content == null ? 'No content' : lastMessage.content?.replaceAll('\n', ' '),
             'isSentByUser': lastMessage.senderEmail == currentUser.email,
           };
         } else {
@@ -101,7 +101,7 @@ class _ChatsListState extends State<ChatsList> with RouteAware {
                       children: [
                         if (isSentByUser) const Icon(Icons.check, size: 16),
                         const SizedBox(width: 4),
-                        Text(content),
+                        Text(content.length > 35 ? '${content.substring(0, 35)}...' : content),
                       ],
                     )
                   : const Text(

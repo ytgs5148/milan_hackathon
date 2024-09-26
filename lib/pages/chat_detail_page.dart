@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:milan_hackathon/components/bottom_bar.dart';
 import 'package:milan_hackathon/models/chat.dart';
 import 'package:milan_hackathon/models/message.dart';
@@ -21,8 +23,12 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   final AuthService _auth = AuthService();
   user_model.User? _currentUser;
   user_model.User? _receiverUser;
+  final TextEditingController _textEditingController = TextEditingController();
 
   int selectedIndex = 1;
+  bool _showAiOptions = false;
+  bool _isLoadingAiResponse = false;
+  String? _aiResponse;
 
   void onItemTapped(int index) async {
     setState(() {
@@ -135,8 +141,67 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     );
   }
 
+  Future<void> fetchAiResponse(String option, String text) async {
+    setState(() {
+      _isLoadingAiResponse = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyAMWxsM-qSg3-SfOLks6WCFyVVoIU9_yc0'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "contents": [{
+              "parts": [{"text": 'Convert the following text to $option:\n\n$text'}]
+          }]
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+        if (responseBody['candidates'][0]['finishReason'] == 'SAFETY') {
+          _aiResponse = 'Error: Text is not safe for AI processing. Contains harmful content.';
+        } else {
+          _aiResponse = responseBody['candidates'][0]['content']['parts'][0]['text'];
+        }
+        _textEditingController.text = _aiResponse!;
+      } else {
+        _aiResponse = 'Error: ${response.statusCode} ${response.body}';
+      }
+    } catch (e) {
+      _aiResponse = 'Error: $e';
+    } finally {
+      setState(() {
+        _isLoadingAiResponse = false;
+      });
+
+      _showAiResponsePopup(_aiResponse ?? 'No response');
+    }
+  }
+
+  void _showAiResponsePopup(String response) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('AI Generated Response'),
+          content: Text(response),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
+    _textEditingController.dispose();
     super.dispose();
   }
 
@@ -153,7 +218,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                     backgroundImage: NetworkImage(_receiverUser!.profilePhoto),
                   ),
                 const SizedBox(width: 10),
-                Text(_receiverUser?.name ?? 'Unknown'),
+                Text(_receiverUser?.name != null ? (_receiverUser!.name.length > 20 ? '${_receiverUser!.name.substring(0, 20)}...' : _receiverUser!.name) : 'Unknown'),
               ],
             ),
           ),
@@ -201,12 +266,17 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                           ),
                         ),
                         inputTextStyle: const TextStyle(color: Colors.black),
+                        textController: _textEditingController,
                         sendButtonBuilder: (onSend) {
                           return Row(
                             children: [
                               IconButton(
                                 icon: const Icon(Icons.auto_awesome),
-                                onPressed: () {},
+                                onPressed: () {
+                                  setState(() {
+                                    _showAiOptions = !_showAiOptions;
+                                  });
+                                },
                               ),
                               IconButton(
                                 icon: const Icon(Icons.send),
@@ -239,6 +309,55 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             )
           else
             const Center(child: CircularProgressIndicator()),
+          if (_showAiOptions)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        side: const BorderSide(color: Colors.blueAccent),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        padding: const EdgeInsets.all(12),
+                        backgroundColor: Colors.blue[50],
+                      ),
+                      onPressed: _isLoadingAiResponse
+                          ? null
+                          : () async {
+                              await fetchAiResponse('formal', _textEditingController.text);
+                            },
+                      child: _isLoadingAiResponse
+                          ? const CircularProgressIndicator()
+                          : const Text('Make my text formal', style: TextStyle(color: Colors.blue)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        side: const BorderSide(color: Colors.blueAccent),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        padding: const EdgeInsets.all(12),
+                        backgroundColor: Colors.blue[50],
+                      ),
+                      onPressed: _isLoadingAiResponse
+                          ? null
+                          : () async {
+                              await fetchAiResponse('casual', _textEditingController.text);
+                            },
+                      child: _isLoadingAiResponse
+                          ? const CircularProgressIndicator()
+                          : const Text('Make my text casual', style: TextStyle(color: Colors.blue)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
       bottomNavigationBar: BottomBar(currentIndex: selectedIndex, onItemTapped: onItemTapped),

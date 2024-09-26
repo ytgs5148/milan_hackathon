@@ -271,8 +271,7 @@ class _PostState extends State<PostCard> {
                           onPressed: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text(
-                                    'You need to be logged in to vote on a post'),
+                                content: Text('You need to be logged in to vote on a post'),
                               ),
                             );
                           },
@@ -291,7 +290,10 @@ class _PostState extends State<PostCard> {
                             );
                           },
                         ),
-                        IconButton(
+                        if (_isLoadingAiResponse)
+                          const CircularProgressIndicator()
+                        else 
+                          IconButton(
                           icon: const Icon(Icons.auto_awesome),
                           onPressed: _isLoadingAiResponse
                               ? null
@@ -301,14 +303,6 @@ class _PostState extends State<PostCard> {
                                   });
                                   fetchAiResponse();
                                 },
-                          iconSize: 24.0,
-                          padding: const EdgeInsets.all(0),
-                        ),
-                        if (_isLoadingAiResponse)
-                          const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
                           ),
                       ],
                     ),
@@ -370,7 +364,10 @@ class _PostState extends State<PostCard> {
                                 });
                           },
                         ),
-                        IconButton(
+                        if (_isLoadingAiResponse)
+                          const CircularProgressIndicator()
+                        else 
+                          IconButton(
                           icon: const Icon(Icons.auto_awesome),
                           onPressed: _isLoadingAiResponse
                               ? null
@@ -380,12 +377,6 @@ class _PostState extends State<PostCard> {
                                   });
                                   fetchAiResponse();
                                 },
-                        ),
-                        if (_isLoadingAiResponse)
-                          const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
                           ),
                       ],
                     ),
