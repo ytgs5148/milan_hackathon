@@ -31,10 +31,10 @@ class _ShopPageState extends State<ShopPage> {
           Navigator.pushReplacementNamed(context, '/chats');
           break;
         case 3:
-          Navigator.pushReplacementNamed(context, '/resources');
+          Navigator.pushReplacementNamed(context, '/map');
           break;
         case 4:
-          Navigator.pushReplacementNamed(context, '/maps');
+          Navigator.pushReplacementNamed(context, '/profile');
           break;
       }
     }

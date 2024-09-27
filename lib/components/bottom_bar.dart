@@ -28,12 +28,12 @@ class BottomBar extends StatelessWidget {
           label: 'Shop',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.folder),
-          label: 'Resources',
+          icon: Icon(Icons.map),
+          label: 'Map',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.map),
-          label: 'Maps',
+          icon: Icon(Icons.person),
+          label: 'Profile',
         ),
       ],
       currentIndex: currentIndex,

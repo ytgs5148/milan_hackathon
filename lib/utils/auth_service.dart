@@ -111,25 +111,17 @@ class AuthService {
   }
 
   Future<user_model.User?> getUserData(String email) async {
-    log('Fetching user data for email: $email'); // Debugging log
+    log('Fetching user data for email: $email');
     final userDoc = await _firestore
         .collection('users')
         .where('email', isEqualTo: email)
         .get();
-    log('Firestore query completed. Number of documents found: ${userDoc.docs.length}'); // Debugging log
+    log('Firestore query completed. Number of documents found: ${userDoc.docs.length}');
     if (userDoc.docs.isNotEmpty) {
       final user = userDoc.docs.first;
-      log('User data found: ${user.data()}'); // Debugging log
+      log('User data found: ${user.data()}');
       return user_model.User.fromMap(user.data());
     } else {
-      log('No user data found for email: $email'); // Debugging log
-
-      // Fetch all users and log their emails for debugging
-      final allUsers = await _firestore.collection('users').get();
-      for (var doc in allUsers.docs) {
-        log('Stored user email: ${doc.data()['email']}'); // Debugging log
-      }
-
       return null;
     }
   }
@@ -158,8 +150,8 @@ class AuthService {
           if (snapshot.docs.isNotEmpty) {
             log('Chat data found for participants: $participants');
             final doc = snapshot.docs.first;
-            final data = doc.data() as Map<String, dynamic>; // Convert to Map<String, dynamic>
-            return Chat.fromJson(data); // Convert the map to a Chat model
+            final data = doc.data() as Map<String, dynamic>;
+            return Chat.fromJson(data);
           } else {
             log('No chat data found for participants: $participants');
             _firestore.collection('chats').add({

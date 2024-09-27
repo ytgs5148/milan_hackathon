@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:milan_hackathon/utils/auth_service.dart';
 
@@ -67,6 +69,7 @@ class _TopBarState extends State<TopBar> {
                     isLoading = true;
                   });
                   if (result == 'Login') {
+                    log('message');
                     final user = await auth.loginWithGoogle();
                     if (user != null) {
                       Navigator.pushNamed(context, '/');

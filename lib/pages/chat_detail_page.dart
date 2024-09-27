@@ -63,10 +63,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           Navigator.pushNamed(context, '/shop');
           break;
         case 3:
-          Navigator.pushNamed(context, '/resources');
+          Navigator.pushNamed(context, '/map');
           break;
         case 4:
-          Navigator.pushNamed(context, '/map');
+          Navigator.pushNamed(context, '/profile');
           break;
       }
     }
