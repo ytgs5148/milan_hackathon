@@ -27,22 +27,12 @@ class _MapPageState extends State<MapPage> {
   void initState() {
     super.initState();
     controller = MapController(
-      initPosition: centerPoint,
-      areaLimit: boundingBox
+      areaLimit: boundingBox,
+      useExternalTracking: true,
+      initMapWithUserPosition: const UserTrackingOption(
+        enableTracking: true,
+      ),
     );
-  }
-
-  bool _isWithinBounds(GeoPoint point) {
-    return point.latitude <= boundingBox.north && point.latitude >= boundingBox.south && point.longitude <= boundingBox.east && point.longitude >= boundingBox.west;
-  }
-
-  Future<void> _checkPosition(GeoPoint position) async {
-    if (!_isWithinBounds(position)) {
-      double latitude = position.latitude.clamp(boundingBox.south, boundingBox.north);
-      double longitude = position.longitude.clamp(boundingBox.west, boundingBox.east);
-      
-      await controller.moveTo(GeoPoint(latitude: latitude, longitude: longitude));
-    }
   }
 
   void onItemTapped(int index) {
@@ -73,26 +63,20 @@ class _MapPageState extends State<MapPage> {
           OSMFlutter(
             osmOption: const OSMOption(
               zoomOption: ZoomOption(
-                minZoomLevel: 16,
+                minZoomLevel: 15,
                 maxZoomLevel: 18,
-                initZoom: 16,
+                initZoom: 15,
               ),
-              showZoomController: true,
               enableRotationByGesture: false,
+              showContributorBadgeForOSM: true,
             ),
-            controller: MapController(
-              initPosition: centerPoint,
-              areaLimit: boundingBox,
-            ),
+            controller: controller,
             onMapIsReady: (isReady) {
               if (isReady) {
                 setState(() {
                   isMapReady = true;
                 });
               }
-            },
-            onLocationChanged: (GeoPoint newLocation) async {
-              await _checkPosition(newLocation);
             },
           ),
           if (!isMapReady)
