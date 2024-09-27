@@ -245,6 +245,19 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                       messageOptions: MessageOptions(
                         showOtherUsersAvatar: true,
                         showTime: true,
+                        avatarBuilder: (ChatUser user, Function? onPress, Function? onLongPress) {
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: GestureDetector(
+                              child: CircleAvatar(
+                                radius: 15,
+                                backgroundImage: NetworkImage(user.profileImage ?? ''),
+                                child: user.profileImage == null ? Text(user.firstName![0]) : null,
+                              ),
+                            ),
+                          );
+                        },
+                        messagePadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
                         messageDecorationBuilder: (ChatMessage msg, ChatMessage? prevMsg, ChatMessage? nextMsg) {
                           bool isUser = msg.user.id == _currentUser!.email;
                           return BoxDecoration(
@@ -301,6 +314,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                         await _auth.sendMessage(message);
                       },
                     );
+
                   } else {
                     return const Center(child: Text('No data available.'));
                   }

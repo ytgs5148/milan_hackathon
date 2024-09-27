@@ -30,11 +30,58 @@ class AuthService {
       String branch = '';
       String year = '';
 
-      if (user != null &&
-          user.email != null &&
-          user.email!.endsWith('@iith.ac.in')) {
+      if (user != null && user.email != null && user.email!.endsWith('@iith.ac.in')) {
         branch = user.email!.substring(0, 2);
         year = user.email!.substring(2, 4);
+
+        final chatDoc = await _firestore.collection('chats').where('participants', arrayContains: '$branch$year@chat.com').get();
+
+        if (chatDoc.docs.isNotEmpty) {
+          final chat = chatDoc.docs.first;
+          final chatId = chat.id;
+          await _firestore.collection('chats').doc(chatId).update({
+            'participants': FieldValue.arrayUnion([user.email]),
+          });
+        } else {
+          await _firestore.collection('chats').add({
+            'participants': [user.email, '$branch$year@chat.com']..sort(),
+            'messages': [],
+          });
+
+          await _firestore.collection('chats').add({
+            'participants': [user.email, '$branch@bchat.com']..sort(),
+            'messages': [],
+          });
+
+          await _firestore.collection('chats').add({
+            'participants': [user.email, '$year@ychat.com']..sort(),
+            'messages': [],
+          });
+
+          await _firestore.collection('users').add({
+            'name': '${branch.toUpperCase()} year $year',
+            'email': '$branch$year@chat.com',
+            'profilePhoto': 'https://commons.wikimedia.org/wiki/File:Google_Groups_icon.png',
+            'branch': branch,
+            'year': year,
+          });
+
+          await _firestore.collection('users').add({
+            'name': '${branch.toUpperCase()}',
+            'email': '${branch}@bchat.com',
+            'profilePhoto': 'https://commons.wikimedia.org/wiki/File:Google_Groups_icon.png',
+            'branch': branch,
+            'year': year,
+          });
+
+          await _firestore.collection('users').add({
+            'name': 'Year $year',
+            'email': '${year}@ychat.com',
+            'profilePhoto': 'https://commons.wikimedia.org/wiki/File:Google_Groups_icon.png',
+            'branch': branch,
+            'year': year,
+          });
+        }
       }
 
       if (user != null) {
@@ -110,6 +157,10 @@ class AuthService {
     }
   }
 
+  Stream<QuerySnapshot<Map<String, dynamic>>> getGroupChatsStream() {
+  return _firestore.collection('chats').snapshots();
+}
+
   Future<user_model.User?> getUserData(String email) async {
     log('Fetching user data for email: $email');
     final userDoc = await _firestore
@@ -143,23 +194,25 @@ class AuthService {
     final participants = [senderEmail, receiverEmail]..sort();
 
     return _firestore
-        .collection('chats')
-        .where('participants', isEqualTo: participants)
-        .snapshots()
-        .map((QuerySnapshot snapshot) {
-          if (snapshot.docs.isNotEmpty) {
-            log('Chat data found for participants: $participants');
-            final doc = snapshot.docs.first;
-            final data = doc.data() as Map<String, dynamic>;
-            return Chat.fromJson(data);
-          } else {
-            log('No chat data found for participants: $participants');
+      .collection('chats')
+      .where('participants', isEqualTo: participants)
+      .snapshots()
+      .map((QuerySnapshot snapshot) {
+        if (snapshot.docs.isNotEmpty) {
+          log('Chat data found for participants: $participants');
+          final doc = snapshot.docs.first;
+          final data = doc.data() as Map<String, dynamic>;
+          return Chat.fromJson(data);
+        } else {
+          log('No chat data found for participants: $participants');
+          if (!receiverEmail.endsWith('chat.com')) {
             _firestore.collection('chats').add({
               'participants': participants,
               'messages': [],
             });
-            return null;
           }
-        });
+          return null;
+        }
+      });
   }
 }

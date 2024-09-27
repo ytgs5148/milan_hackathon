@@ -102,8 +102,7 @@ class _PostState extends State<PostCard> {
             {
               "parts": [
                 {
-                  "text":
-                      'Summarize the following text in 1-2 sentences: ${_post.title} ${_post.description}'
+                  "text": 'Summarize the following text in 1-2 sentences: ${_post.title} ${_post.description}'
                 }
               ]
             }
@@ -113,8 +112,7 @@ class _PostState extends State<PostCard> {
 
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
-        _aiResponse =
-            responseBody['candidates'][0]['content']['parts'][0]['text'];
+        _aiResponse = responseBody['candidates'][0]['content']['parts'][0]['text'];
       } else {
         _aiResponse = 'Error: ${response.statusCode} ${response.body}';
       }
@@ -152,7 +150,7 @@ class _PostState extends State<PostCard> {
         return StatefulBuilder(
           builder: (BuildContext dialogContext, setDialogState) {
             return AlertDialog(
-              title: const Text('AI Generated Text'),
+              title: const Text('AI Summary'),
               content: _isLoadingAiResponse
                   ? const Center(child: CircularProgressIndicator())
                   : Text(_aiResponse ?? 'No response'),

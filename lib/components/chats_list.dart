@@ -25,7 +25,6 @@ class _ChatsListState extends State<ChatsList> with RouteAware {
       log('Fetching last message for $receiverEmail');
       final currentUser = await _auth.getCurrentUser();
       await for (var chat in _auth.getChatData(currentUser!.email!, receiverEmail)) {
-        log('Chat data: $chat $currentUser $receiverEmail');
         if (chat != null && chat.messages != null && chat.messages!.isNotEmpty) {
           final lastMessage = chat.messages!.last;
           log(lastMessage.content.toString());
