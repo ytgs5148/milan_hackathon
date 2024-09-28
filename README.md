@@ -53,7 +53,7 @@ flutter pub get
 
 3. **Initialize Firebase Files**
 
-Generate the SHA-1 and SHA-256 keys to Firebase. Console.
+    1. Generate the SHA-1 and SHA-256 keys to Firebase. Console.
     2. Add an Android app to your Firebase project.
     3. Download the google-services.json file and place it in the android/app directory.
     4. Add the Firebase configuration to your Flutter project by creating a lib/firebase_options.dart file. You can use the FlutterFire CLI to generate this file:
