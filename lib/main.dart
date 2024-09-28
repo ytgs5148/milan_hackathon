@@ -18,6 +18,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'IITH Community App',
       theme: ThemeData.dark(),
       initialRoute: '/',

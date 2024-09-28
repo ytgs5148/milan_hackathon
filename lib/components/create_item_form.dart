@@ -27,7 +27,10 @@ class _CreateItemFormState extends State<CreateItemForm> {
   bool _isLoading = false;
 
   Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    final pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 25
+    );
     if (pickedFile != null) {
       setState(() {
         _imageFile = File(pickedFile.path);

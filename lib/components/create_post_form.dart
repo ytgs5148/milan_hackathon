@@ -31,7 +31,10 @@ class _CreatePostFormState extends State<CreatePostForm> {
 
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 25
+    );
     if (image != null) {
       setState(() {
         _imagePath = image.path;
@@ -72,7 +75,8 @@ class _CreatePostFormState extends State<CreatePostForm> {
           const SnackBar(content: Text('Post uploaded successfully!')),
         );
 
-        Navigator.of(context).pop();
+        // Navigator.of(context).pop();
+        Navigator.pushReplacementNamed(context, '/');
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to upload post: $e')),

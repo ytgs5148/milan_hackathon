@@ -156,6 +156,7 @@ class PostManager {
 
   Future<void> createPost(String title, String description, String authorEmail, String imageUrl) async {
     final String postId = DateTime.now().millisecondsSinceEpoch.toString();
+    log('creating post with ID: $postId');
     try {
       final post = {
         'postId': postId,

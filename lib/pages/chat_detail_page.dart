@@ -184,7 +184,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('AI Generated Response'),
+          title: const Text('AI Conversion'),
           content: Text(response),
           actions: [
             TextButton(

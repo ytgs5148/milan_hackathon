@@ -127,7 +127,7 @@ class _PostState extends State<PostCard> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: const Text('AI Generated Text'),
+            title: const Text('AI Generated Summary'),
             content: Text(_aiResponse ?? 'No response'),
             actions: [
               TextButton(
